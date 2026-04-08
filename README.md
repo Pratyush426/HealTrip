@@ -15,7 +15,7 @@
 </div>
 
 ## 📖 Overview
-HealTrip is a full-stack, AI-driven medical tourism platform designed to bridge the gap between patients and world-class healthcare facilities globally. By combining advanced Machine Learning algorithms, Large Language Models (LLMs), and an intuitive UI, HealTrip provides a seamless end-to-end journey—from initial symptom diagnosis to booking top-rated hospitals, targeted flights, and accommodations.
+HealTrip is a full-stack, AI-driven medical tourism platform designed to bridge the gap between patients and world-class healthcare facilities globally. By combining advanced Machine Learning algorithms, Large Language Models (LLMs), and an intuitive UI, HealTrip provides a seamless end-to-end journey—from initial symptom diagnosis to booking top-rated hospitals, targeted flights, accommodations, and handling complex visa requirements for international medical travel.
 
 ---
 
@@ -84,7 +84,14 @@ graph TD
 - **6-Step Wizard**: Navigates the user through a frictionless funnel: `Destination -> Hospital -> Flights -> Hotels -> Transport -> Summary`.
 - **Integrated ML Logistics**: Connects directly to the Flights and Hotels ML APIs to recommend dynamic travel itineraries optimized by cost and shortest travel duration.
 
-### 4. 💳 Frictionless Bookings
+### 4. � Medical Visa Automation
+- **Automatic Visa Letter Generation**: Users can generate professional medical visa request letters directly from their uploaded medical documents and treatment details.
+- **PDF Generation**: Letters are automatically formatted and converted to PDF using PDFKit, with professional templates stored in Cloudinary.
+- **Multi-Country Support**: Comprehensive visa requirements reference for 7 major medical tourism destinations including India, USA, Canada, UK, Thailand, Germany, and Turkey.
+- **Visa Requirements Explorer**: Interactive interface showing required documents, processing times, validity periods, and application costs for each country.
+- **Letter Management**: View, download, delete, and track versions of generated visa letters with status tracking.
+
+### 5. �💳 Frictionless Bookings
 - Unified payment flow combining Stripe and Razorpay integrations to process international and domestic (Indian) currencies seamlessly.
 
 ---
@@ -94,7 +101,7 @@ graph TD
 | Layer | Technologies |
 | :--- | :--- |
 | **Frontend** | React 19, TailwindCSS, Framer Motion, GSAP, Radix UI, Lucide Icons, Three.js |
-| **Backend** | Node.js, Express.js, Mongoose |
+| **Backend** | Node.js, Express.js, Mongoose, PDFKit, Cloudinary |
 | **Microservices** | Python 3.9, FastAPI, Uvicorn, Pandas, Scikit-learn, Numpy |
 | **Database** | MongoDB Atlas |
 | **Authentication** | Clerk Auth |
