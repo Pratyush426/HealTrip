@@ -16,7 +16,7 @@ import diagnosisRoutes from './routes/diagnosis.routes.js';
 import wellnessRoutes from './routes/wellness.routes.js';
 import paymentRoutes from './routes/payment.routes.js';
 import flightRoutes from './routes/flight.routes.js';
-
+import visaRoutes from './routes/visa.routes.js';
 
 import aiRoutes from './routes/ai.routes.js';
 import chatRoutes from './routes/chat.routes.js';
@@ -59,7 +59,7 @@ app.use('/api/diagnosis', diagnosisRoutes);
 app.use('/api/wellness', wellnessRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/flights', flightRoutes);
-app.use('/api/flights', flightRoutes);
+app.use('/api/visa', visaRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/ml', mlRoutes);

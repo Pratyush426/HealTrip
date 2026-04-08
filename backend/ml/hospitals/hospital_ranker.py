@@ -16,16 +16,31 @@ class HospitalRanker:
         with open(os.path.join(models_dir, "hospital_data.pkl"), "rb") as f:
             self.df, self.tfidf_matrix = pickle.load(f)
             
-    def get_top_hospitals(self, disease: str, specialty: str, top_k: int = 5) -> list:
+    def get_top_hospitals(self, disease: str, specialty: str, top_k: int = 5, city: str = None) -> list:
         """
         Rank hospitals based on:
         - Filter by Specialty
+        - Filter by City (optional)
         - 50% Rating
         - 30% Review Count
         - 20% Text Similarity (Disease vs Summary)
         """
         # 1. Filter by Specialty
         specialty_mask = self.df['Specialty'].str.lower() == specialty.lower()
+        
+        if city:
+            # Since normalized_city is passed, we check if the df city roughly maps to the same
+            city_aliases = {
+                'bangalore': 'bengaluru', 'bengaluru': 'bengaluru',
+                'bombay': 'mumbai', 'mumbai': 'mumbai',
+                'delhi': 'new delhi', 'new delhi': 'new delhi',
+                'madras': 'chennai', 'chennai': 'chennai',
+                'calcutta': 'kolkata', 'kolkata': 'kolkata'
+            }
+            city_mask = self.df['City'].str.lower().str.strip().apply(
+                lambda x: city_aliases.get(x, x) == city
+            )
+            specialty_mask = specialty_mask & city_mask
         
         # If no hospitals found for strict specialty, fall back to all (or deal with it differently)
         # For now, if no match, we return empty list

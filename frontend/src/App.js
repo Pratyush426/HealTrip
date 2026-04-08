@@ -20,6 +20,7 @@ import EmergencySOS from "./pages/EmergencySOS";
 import DiagnosisUpload from "./components/DiagnosisUpload";
 import Payment from "./pages/Payment";
 import SSOCallback from "./pages/SSOCallback";
+import VisaRequests from "./pages/VisaRequests";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import HealChat from "./pages/HealChat";
@@ -99,6 +100,7 @@ function Layout() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/emergency" element={<EmergencySOS />} />
         <Route path="/payment" element={<Payment />} />
+        <Route path="/visa-requests" element={<VisaRequests />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/verify-email" element={<VerifyEmail />} />

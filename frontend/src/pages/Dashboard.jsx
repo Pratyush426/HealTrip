@@ -188,6 +188,15 @@ export default function Dashboard() {
                 <Bot className="absolute -bottom-4 -right-4 w-24 h-24 text-indigo-500/10 rotate-12" />
               </div>
 
+              <div className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-blue-500/20 rounded-2xl p-6 relative overflow-hidden">
+                <div className="relative z-10">
+                  <h3 className="text-lg font-bold flex items-center gap-2 mb-2"><Plane className="w-5 h-5 text-blue-400"/> Medical Visa Letters</h3>
+                  <p className="text-sm text-zinc-400 mb-4">Generate professional visa request letters for your medical treatment.</p>
+                  <button onClick={() => navigate("/visa-requests")} className="w-full py-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-bold transition">View Visa Requests</button>
+                </div>
+                <Plane className="absolute -bottom-4 -right-4 w-24 h-24 text-blue-500/10 rotate-12" />
+              </div>
+
               <div className="bg-zinc-900/50 border border-white/5 rounded-2xl p-6">
                  <h3 className="text-sm font-bold flex items-center gap-2 mb-4 text-zinc-400 uppercase tracking-wider"><MessageSquare className="w-4 h-4"/> Recent AI Notes</h3>
                  {loadingHistory ? (

@@ -116,8 +116,11 @@ async def predict_all_endpoint(
     }
 
 @app.get("/hospitals-by-city", response_model=List[HospitalResponse])
-def get_hospitals_by_city(city: str = Query(..., description="City name")):
-    """Get all hospitals in a specific city"""
+def get_hospitals_by_city(
+    city: str = Query(..., description="City name"),
+    disease: Optional[str] = Query(None, description="Optional disease for curation")
+):
+    """Get all hospitals in a specific city, optionally curated by disease"""
     try:
         # City name variations mapping
         city_aliases = {
@@ -137,11 +140,16 @@ def get_hospitals_by_city(city: str = Query(..., description="City name")):
         city_lower = city.lower().strip()
         normalized_city = city_aliases.get(city_lower, city_lower)
         
+        # If disease is provided, use the ML ranker for curation
+        if disease:
+            specialty = map_disease_to_specialty(disease)
+            return ranker.get_top_hospitals(disease, specialty, top_k=20, city=normalized_city)
+            
         # Check if ranker has data
         if not hasattr(ranker, 'df') or ranker.df is None:
             return []
         
-        # Filter hospitals by normalized city name
+        # Filter hospitals by normalized city name normally
         city_mask = ranker.df['City'].str.lower().str.strip().apply(
             lambda x: city_aliases.get(x, x) == normalized_city
         )

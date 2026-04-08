@@ -59,6 +59,7 @@ export default function Navbar() {
     { name: "Flights", path: "/travel" },
     { name: "Journey", path: "/journey" },
     { name: "Wellness", path: "/yoga" },
+    { name: "Visa Requests", path: "/visa-requests" },
   ];
 
   const handleSignOut = async () => {

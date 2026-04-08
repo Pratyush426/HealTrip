@@ -41,6 +41,19 @@ const userSchema = new mongoose.Schema(
         profileImage: {
             type: String,
         },
+        age: {
+            type: Number,
+        },
+        gender: {
+            type: String,
+            trim: true,
+        },
+        homeCity: {
+            type: String,
+            trim: true,
+        },
+        conditions: [String],
+        symptoms: [String],
         // Medical Information
         medicalHistory: [
             {
@@ -82,6 +95,25 @@ const userSchema = new mongoose.Schema(
                 ref: 'Booking',
             },
         ],
+        // Premium Features
+        premiumFeatures: [
+            {
+                featureName: String, // 'medical_visa_letter', 'priority_support', etc.
+                purchasedAt: { type: Date, default: Date.now },
+                expiresAt: Date, // null = lifetime
+                status: { type: String, enum: ['active', 'expired', 'cancelled'], default: 'active' },
+                renewalCount: { type: Number, default: 0 },
+            },
+        ],
+        
+        // Visa Letter History
+        visaLetters: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'MedicalVisaRequest',
+            },
+        ],
+
         // Preferences
         preferences: {
             language: {

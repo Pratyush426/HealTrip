@@ -7,6 +7,7 @@ import {
 import toast from "react-hot-toast";
 import { useUserProfile } from "../context/UserProfileContext";
 import { useNavigate } from "react-router-dom";
+import VisaRequirementsSlider from "../components/VisaRequirementsSlider";
 
 // Constants & Mocks
 const INDIAN_CITIES = ["Bangalore", "Mumbai", "New Delhi", "Chennai", "Hyderabad", "Kolkata", "Pune", "Ahmedabad"];
@@ -82,16 +83,51 @@ export default function JourneyPlanner() {
     }
   };
 
+  // Calculate Total
+  const calculateTotal = () => {
+    let total = 0;
+    if (selections.flight) total += selections.flight.price;
+    if (selections.hotel) total += selections.hotel.price; // Per night default
+    if (selections.taxi) total += selections.taxi.basePrice * selections.taxiDays;
+    return total;
+  };
+
   // STEP 2: Fetch Hospitals when City is chosen
   useEffect(() => {
     if (selections.city && activeStep === 2 && hospitals.length === 0) {
       const fetchHospitals = async () => {
         setLoading(p => ({ ...p, hospitals: true }));
         try {
-          const res = await fetch(`http://localhost:8001/hospitals-by-city?city=${selections.city}`);
+          // Combine user's conditions and symptoms to pass as the disease target
+          const conditionsStr = profile.conditions?.join(" ") || "";
+          const symptomsStr = profile.symptoms?.join(" ") || "";
+          const healthQuery = `${conditionsStr} ${symptomsStr}`.trim();
+          
+          let url = `http://localhost:8001/hospitals-by-city?city=${encodeURIComponent(selections.city)}`;
+          if (healthQuery) {
+            url += `&disease=${encodeURIComponent(healthQuery)}`;
+          }
+
+          const res = await fetch(url);
           if (res.ok) {
             const data = await res.json();
-            setHospitals(data.slice(0, 6)); // Top 6
+            
+            // If ML found curated results based on disease
+            if (data && data.length > 0) {
+                setHospitals(data.slice(0, 6)); // Top 6 curated
+            } else if (healthQuery) {
+                // Fallback to top rated in city if no specific ML match found for this disease in this city
+                const fallbackRes = await fetch(`http://localhost:8001/hospitals-by-city?city=${encodeURIComponent(selections.city)}`);
+                if (fallbackRes.ok) {
+                    const fallbackData = await fallbackRes.json();
+                    setHospitals(fallbackData.slice(0, 6));
+                } else {
+                    setHospitals(MOCK_HOSPITALS);
+                }
+            } else {
+                // If it was just a city query with no results
+                setHospitals(MOCK_HOSPITALS);
+            }
           } else {
             toast.error("ML Service down. Using mock data.");
             setHospitals(MOCK_HOSPITALS);
@@ -104,7 +140,7 @@ export default function JourneyPlanner() {
       };
       fetchHospitals();
     }
-  }, [activeStep, selections.city, hospitals.length]);
+  }, [activeStep, selections.city, hospitals.length, profile.conditions, profile.symptoms]);
 
   // STEP 3: Fetch Flights (uses user's home city)
   useEffect(() => {
@@ -204,7 +240,7 @@ export default function JourneyPlanner() {
       </div>
 
       {/* MAIN CONTENT AREA */}
-      <div className="flex-1 lg:ml-64 p-6 md:p-12 overflow-hidden">
+      <div className="flex-1 lg:ml-64 p-6 md:p-12 pb-32 md:pb-32 overflow-hidden">
         <AnimatePresence mode="wait">
            
            {/* STEP 1: DESTINATION */}
@@ -445,8 +481,24 @@ export default function JourneyPlanner() {
                              <p className="text-blue-400 text-sm font-bold mt-1">₹{selections.taxi?.basePrice * selections.taxiDays}</p>
                            </div>
                          </div>
+                         
+                         {/* Total Sum */}
+                         <div className="flex justify-between items-center mt-8 pt-8 border-t border-white/5">
+                           <div>
+                             <p className="text-sm text-zinc-500 font-bold uppercase tracking-wider mb-1">Total Estimated Cost</p>
+                             <p className="text-xs text-zinc-500">Includes flight, 1 night hotel, and transport</p>
+                           </div>
+                           <div className="text-4xl font-bold text-emerald-400 flex items-center">
+                             <IndianRupee className="w-8 h-8 mr-1 " />{calculateTotal()}
+                           </div>
+                         </div>
 
                       </div>
+                   </div>
+
+                   {/* Visa Requirements Slider */}
+                   <div className="mt-12">
+                     <VisaRequirementsSlider userCountry={profile.country || "India"} />
                    </div>
 
                    <div className="mt-8 flex justify-end">
@@ -461,9 +513,42 @@ export default function JourneyPlanner() {
                 </div>
              </StepWrapper>
            )}
-           
         </AnimatePresence>
       </div>
+      
+      {/* Floating Total Bar */}
+      {calculateTotal() > 0 && activeStep < 6 && (
+        <div className="fixed bottom-0 left-0 lg:left-64 right-0 bg-zinc-900/95 backdrop-blur-md border-t border-white/10 p-4 z-50 flex justify-between items-center px-6 md:px-12 shadow-[0_-5px_30px_rgba(0,0,0,0.5)]">
+            <div className="flex flex-col">
+                <span className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Estimated Total</span>
+                <span className="text-2xl font-bold text-emerald-400 flex items-center">
+                    <IndianRupee className="w-5 h-5 mr-1" />
+                    {calculateTotal()}
+                </span>
+            </div>
+            
+            <div className="hidden md:flex gap-6 text-sm">
+                {selections.flight && (
+                  <div className="flex flex-col border-l border-white/10 pl-6">
+                    <span className="text-zinc-500 text-xs">Flight</span>
+                    <span className="font-bold text-zinc-300">₹{selections.flight.price}</span>
+                  </div>
+                )}
+                {selections.hotel && (
+                  <div className="flex flex-col border-l border-white/10 pl-6">
+                    <span className="text-zinc-500 text-xs">Hotel (1 night)</span>
+                    <span className="font-bold text-zinc-300">₹{selections.hotel.price}</span>
+                  </div>
+                )}
+                {selections.taxi && (
+                  <div className="flex flex-col border-l border-white/10 pl-6">
+                    <span className="text-zinc-500 text-xs">Transport ({selections.taxiDays} days)</span>
+                    <span className="font-bold text-zinc-300">₹{selections.taxi.basePrice * selections.taxiDays}</span>
+                  </div>
+                )}
+            </div>
+        </div>
+      )}
     </div>
   );
 }

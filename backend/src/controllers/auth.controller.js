@@ -65,7 +65,10 @@ export const getUserProfile = async (req, res) => {
  */
 export const updateUserProfile = async (req, res) => {
     try {
-        const { firstName, lastName, phone, country, bloodGroup, allergies, preferences } = req.body;
+        const { 
+            firstName, lastName, phone, country, bloodGroup, allergies, preferences,
+            age, gender, homeCity, conditions, symptoms
+        } = req.body;
 
         const user = await User.findOneAndUpdate(
             { clerkId: req.userId },
@@ -77,6 +80,11 @@ export const updateUserProfile = async (req, res) => {
                 bloodGroup,
                 allergies,
                 preferences,
+                age,
+                gender,
+                homeCity,
+                conditions,
+                symptoms
             },
             { new: true, runValidators: true }
         );
