@@ -1,5 +1,4 @@
 <div align="center">
-  <img src="./frontend/public/hospital-2.png" alt="HealTrip Banner" width="100%" style="border-radius:20px;"/>
   <br/>
   <h1>🩺 HealTrip</h1>
   <strong>The Ultimate AI-Powered Medical Tourism & Wellness Protocol</strong>
