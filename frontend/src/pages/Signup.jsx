@@ -159,11 +159,15 @@ export default function Signup() {
             {/* Google Sign Up */}
             <button
               type="button"
-              onClick={() => signUp.authenticateWithRedirect({
-                strategy: "oauth_google",
-                redirectUrl: "/sso-callback",
-                redirectUrlComplete: "/dashboard"
-              })}
+              onClick={() => {
+                if (signUp) {
+                  signUp.authenticateWithRedirect({
+                    strategy: "oauth_google",
+                    redirectUrl: "/sso-callback",
+                    redirectUrlComplete: "/dashboard"
+                  });
+                }
+              }}
               className="w-full py-4 bg-zinc-900 border border-zinc-700 text-white rounded-lg hover:bg-zinc-800 transition flex items-center justify-center gap-3"
               disabled={loading}
             >

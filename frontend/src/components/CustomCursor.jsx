@@ -1,13 +1,21 @@
-import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { useEffect, useRef } from 'react';
 
 export default function CustomCursor() {
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-    const [isHovering, setIsHovering] = useState(false);
+    const dotRef = useRef(null);
+    const ringRef = useRef(null);
 
     useEffect(() => {
+        let mouseX = 0, mouseY = 0;
+        let dotX = 0, dotY = 0;
+        let ringX = 0, ringY = 0;
+        let scaleDot = 1;
+        let scaleRing = 1;
+        let opacityRing = 0.5;
+        let isHovering = false;
+        
         const updateMousePosition = (e) => {
-            setMousePosition({ x: e.clientX, y: e.clientY });
+            mouseX = e.clientX;
+            mouseY = e.clientY;
         };
 
         const handleMouseOver = (e) => {
@@ -15,52 +23,67 @@ export default function CustomCursor() {
                 e.target.tagName === 'BUTTON' ||
                 e.target.tagName === 'A' ||
                 e.target.closest('button') ||
-                e.target.closest('a')
+                e.target.closest('a') ||
+                e.target.closest('[role="button"]')
             ) {
-                setIsHovering(true);
+                isHovering = true;
             } else {
-                setIsHovering(false);
+                isHovering = false;
             }
         };
 
         window.addEventListener('mousemove', updateMousePosition);
         window.addEventListener('mouseover', handleMouseOver);
 
+        let animationFrameId;
+
+        const render = () => {
+            // Apply smoothing (lerping)
+            dotX += (mouseX - dotX) * 0.4;
+            dotY += (mouseY - dotY) * 0.4;
+            ringX += (mouseX - ringX) * 0.12;
+            ringY += (mouseY - ringY) * 0.12;
+
+            const targetScaleDot = isHovering ? 2.5 : 1;
+            const targetScaleRing = isHovering ? 1.5 : 1;
+            const targetOpacityRing = isHovering ? 0 : 0.5;
+
+            scaleDot += (targetScaleDot - scaleDot) * 0.2;
+            scaleRing += (targetScaleRing - scaleRing) * 0.2;
+            opacityRing += (targetOpacityRing - opacityRing) * 0.2;
+
+            if (dotRef.current) {
+                dotRef.current.style.transform = `translate3d(${dotX - 8}px, ${dotY - 8}px, 0) scale(${scaleDot})`;
+            }
+
+            if (ringRef.current) {
+                ringRef.current.style.transform = `translate3d(${ringX - 16}px, ${ringY - 16}px, 0) scale(${scaleRing})`;
+                ringRef.current.style.opacity = opacityRing;
+            }
+
+            animationFrameId = requestAnimationFrame(render);
+        };
+
+        render();
+
         return () => {
             window.removeEventListener('mousemove', updateMousePosition);
             window.removeEventListener('mouseover', handleMouseOver);
+            cancelAnimationFrame(animationFrameId);
         };
     }, []);
 
     return (
         <>
-            <motion.div
+            <div
+                ref={dotRef}
                 className="fixed top-0 left-0 w-4 h-4 bg-white rounded-full pointer-events-none z-[9999] mix-blend-difference"
-                animate={{
-                    x: mousePosition.x - 8,
-                    y: mousePosition.y - 8,
-                    scale: isHovering ? 2.5 : 1,
-                }}
-                transition={{
-                    type: "spring",
-                    stiffness: 500,
-                    damping: 28,
-                    mass: 0.5
-                }}
+                style={{ willChange: 'transform' }}
             />
-            <motion.div
+            <div
+                ref={ringRef}
                 className="fixed top-0 left-0 w-8 h-8 border border-white rounded-full pointer-events-none z-[9999] mix-blend-difference"
-                animate={{
-                    x: mousePosition.x - 16,
-                    y: mousePosition.y - 16,
-                    scale: isHovering ? 1.5 : 1,
-                    opacity: isHovering ? 0 : 0.5
-                }}
-                transition={{
-                    type: "spring",
-                    stiffness: 250,
-                    damping: 20
-                }}
+                style={{ willChange: 'transform, opacity' }}
             />
         </>
     );

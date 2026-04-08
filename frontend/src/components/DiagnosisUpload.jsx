@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Upload, FileText, Loader2 } from "lucide-react";
+import { useUser } from "@clerk/clerk-react";
 
 export default function DiagnosisUpload() {
   const [file, setFile] = useState(null);
+  const { user } = useUser();
   const [preview, setPreview] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
@@ -27,11 +29,27 @@ export default function DiagnosisUpload() {
     setResult("");
 
     // Simulating backend AI call
-    setTimeout(() => {
+    setTimeout(async () => {
       setLoading(false);
       setResult(
         "Possible diagnosis: Mild respiratory infection.\nRecommended tests: CBC, Chest X-Ray.\nSuggested specialist: Pulmonologist."
       );
+
+      // Sync mock disease into health baseline history
+      if (user) {
+        try {
+          await fetch(`http://localhost:5000/api/chat/update-record`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userId: user.id,
+              diseaseInfo: "Respiratory infection"
+            })
+          });
+        } catch (e) {
+          console.error("Failed to sync diagnosis to baseline", e);
+        }
+      }
     }, 2500);
   };
 

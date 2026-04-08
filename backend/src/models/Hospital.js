@@ -72,7 +72,6 @@ const hospitalSchema = new mongoose.Schema(
                 category: {
                     type: String,
                     required: true,
-                    index: true,
                 }, // 'cardiology', 'orthopedics', 'oncology', etc.
                 description: String,
                 pricing: {

@@ -1,7 +1,12 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import connectDB from './config/db.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Import routes
 import authRoutes from './routes/auth.routes.js';
@@ -15,6 +20,7 @@ import flightRoutes from './routes/flight.routes.js';
 
 import aiRoutes from './routes/ai.routes.js';
 import chatRoutes from './routes/chat.routes.js';
+import mlRoutes from './routes/ml.routes.js';
 
 // Load environment variables
 dotenv.config();
@@ -56,8 +62,23 @@ app.use('/api/flights', flightRoutes);
 app.use('/api/flights', flightRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/ml', mlRoutes);
 
-// 404 handler
+// Serve Frontend in Production
+if (process.env.NODE_ENV === 'production') {
+    const buildPath = path.join(__dirname, '../../frontend/build');
+    app.use(express.static(buildPath));
+    
+    app.get('*', (req, res, next) => {
+        // Only handle HTML requests (let API routes handle their own 404s)
+        if (req.accepts('html') && !req.path.startsWith('/api')) {
+            return res.sendFile(path.join(buildPath, 'index.html'));
+        }
+        next();
+    });
+}
+
+// 404 handler for API routes
 app.use((req, res) => {
     res.status(404).json({
         success: false,
@@ -87,7 +108,7 @@ const startServer = async () => {
         await connectDB();
 
         // Start server
-        app.listen(PORT, () => {
+        const server = app.listen(PORT, () => {
             console.log('='.repeat(50));
             console.log(`🚀 HealTrip Backend Server`);
             console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -102,9 +123,23 @@ const startServer = async () => {
             console.log('  - /api/wellness      (Yoga Shivir & Wellness Sessions)');
             console.log('  - /api/payment       (Payment & Booking Management)');
             console.log('  - /api/flights       (Flight Search & Booking)');
-
+            console.log('  - /api/ml            (ML Proxy API)');
             console.log('='.repeat(50));
         });
+
+        // Catch port already in use cleanly
+        server.on('error', (err) => {
+            if (err.code === 'EADDRINUSE') {
+                console.error(`\n❌ Port ${PORT} is already taken!`);
+                console.error(`✅ Good news: The HealTrip backend is ALREADY RUNNING in the background.`);
+                console.error(`👉 If you really want to restart it, use: npm run dev:safe\n`);
+                process.exit(0);
+            } else {
+                console.error('❌ Server error:', err);
+                process.exit(1);
+            }
+        });
+
     } catch (error) {
         console.error('❌ Failed to start server:', error);
         process.exit(1);

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Send, Bot, X, FileText, Sparkles, Trash2 } from "lucide-react";
 import { useUser } from "@clerk/clerk-react";
 import toast from "react-hot-toast";
+import { BACKEND_URL, API_BASE_URL } from "../apiUrl";
 
 export default function ChatWidget() {
   const { user, isSignedIn } = useUser();
@@ -23,13 +24,24 @@ export default function ChatWidget() {
     if (isOpen) scrollToBottom();
   }, [messages, isOpen]);
 
+  // Client-side keyword extraction for baseline update
+  const extractLocalKeywords = (text) => {
+    const lowerText = text.toLowerCase();
+    const symptomWords = ["fever", "headache", "pain", "cough", "nausea", "dizzy", "fatigue", "rash", "swelling", "vomiting", "chills", "breathless", "chest pain"];
+    const historyWords = ["diabetes", "asthma", "hypertension", "surgery", "allergy", "thyroid", "cancer", "bp", "heart disease"];
+    return {
+      symptoms: symptomWords.filter((s) => lowerText.includes(s)),
+      history: historyWords.filter((h) => lowerText.includes(h)),
+    };
+  };
+
   // Load History & Auto-Open Logic
   useEffect(() => {
     if (!isSignedIn || !user) return;
 
     const fetchHistory = async () => {
         try {
-            const res = await fetch(`http://localhost:5000/api/chat/history/${user.id}`);
+            const res = await fetch(`${API_BASE_URL}/chat/history/${user.id}`);
             const data = await res.json();
             
             if (res.ok && data.data) {
@@ -63,7 +75,7 @@ export default function ChatWidget() {
         if (!window.confirm("Are you sure you want to clear the chat history?")) return;
 
         try {
-            await fetch(`http://localhost:5000/api/chat/history/${user.id}`, { method: 'DELETE' });
+            await fetch(`${API_BASE_URL}/chat/history/${user.id}`, { method: 'DELETE' });
             setMessages([{
                 role: 'bot',
                 content: `Chat history cleared. How can I help you now, ${user.firstName}?`
@@ -126,14 +138,21 @@ export default function ChatWidget() {
             });
         }
 
-        const res = await fetch('http://localhost:5000/api/chat/message', {
+        const extracted = extractLocalKeywords(messageToSend);
+        const contextPayload = {
+            symptoms: extracted.symptoms,
+            history: extracted.history,
+            files: []
+        };
+
+        const res = await fetch(`${API_BASE_URL}/chat/message`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 userId: user.id,
                 message: messageToSend,
                 attachment: attachmentData,
-                context: {} 
+                context: contextPayload 
             })
         });
         const data = await res.json();
@@ -155,7 +174,7 @@ export default function ChatWidget() {
       if (!isSignedIn) return;
       const toastId = toast.loading("Generating Medical Report...");
       try {
-          const res = await fetch('http://localhost:5000/api/chat/report', {
+          const res = await fetch(`${API_BASE_URL}/chat/report`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ userId: user.id })

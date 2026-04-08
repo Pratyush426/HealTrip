@@ -94,7 +94,6 @@ const bookingSchema = new mongoose.Schema(
                 type: String,
                 enum: ['pending', 'completed', 'failed', 'refunded'],
                 default: 'pending',
-                index: true,
             },
             method: {
                 type: String,

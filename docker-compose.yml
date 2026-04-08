@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  healtrip-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGO_URI=mongodb://mongodb:27017/healtrip
+      - ML_HOTELS_URL=http://ml-hotels:8000
+      - ML_HOSPITALS_URL=http://ml-hospitals:8001
+      - ML_FLIGHTS_URL=http://ml-flights:8002
+      # Add other envs from your .env file here
+    depends_on:
+      - mongodb
+      - ml-hotels
+      - ml-hospitals
+      - ml-flights
+    networks:
+      - healtrip-network
+
+  ml-hotels:
+    build:
+      context: ./backend/ml
+      dockerfile: Dockerfile.ml
+      args:
+        SERVICE_PATH: ./hotels
+    ports:
+      - "8000:8000"
+    networks:
+      - healtrip-network
+
+  ml-hospitals:
+    build:
+      context: ./backend/ml
+      dockerfile: Dockerfile.ml
+      args:
+        SERVICE_PATH: ./hospitals
+    ports:
+      - "8001:8001"
+    networks:
+      - healtrip-network
+
+  ml-flights:
+    build:
+      context: ./backend/ml
+      dockerfile: Dockerfile.ml
+      args:
+        SERVICE_PATH: ./flights
+    ports:
+      - "8002:8002"
+    networks:
+      - healtrip-network
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - healtrip-network
+
+networks:
+  healtrip-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:

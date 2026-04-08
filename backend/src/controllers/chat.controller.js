@@ -149,11 +149,15 @@ export const handleChat = async (req, res) => {
 
 // Helper: System Prompt
 const getSystemPrompt = (medicalRecord) => {
+    // Safely get arrays even if legacy data has undefined fields
+    const safeSymptoms = medicalRecord.symptoms || [];
+    const safeHistory = medicalRecord.history || [];
+
     return `You are HealAI, a warm, friendly, and expert Medical Tourism Guide.
 
     Current Patient Profile:
-    - Symptoms: ${medicalRecord.symptoms.join(", ") || "None recorded"}
-    - History: ${medicalRecord.history.join(", ") || "None recorded"}
+    - Symptoms: ${safeSymptoms.join(", ") || "None recorded"}
+    - History: ${safeHistory.join(", ") || "None recorded"}
 
     GOAL: Help organize their health info and plan medical travel.
 
@@ -239,12 +243,52 @@ export const generateReport = async (req, res) => {
 export const deleteChatHistory = async (req, res) => {
     try {
         const { userId } = req.params;
-        const chat = await Chat.findOneAndDelete({ userId });
-
-        // Return clear success even if no chat existed
+        await Chat.findOneAndDelete({ userId });
+        return successResponse(res, 200, null, "History deleted");
     } catch (error) {
         console.error("Delete Chat Error:", error);
         return errorResponse(res, 500, "Error deleting history");
+    }
+};
+
+/**
+ * Direct Update Medical Record
+ */
+export const updateMedicalRecord = async (req, res) => {
+    try {
+        const { userId, symptoms, history, diseaseInfo } = req.body;
+        
+        let record = await MedicalRecord.findOne({ userId });
+        if (!record) {
+            record = new MedicalRecord({ userId, symptoms: [], history: [], files: [] });
+        }
+
+        if (symptoms) {
+            if (Array.isArray(symptoms)) {
+                symptoms.forEach(s => { if (!record.symptoms.includes(s)) record.symptoms.push(s); });
+            } else if (typeof symptoms === 'string' && !record.symptoms.includes(symptoms)) {
+                record.symptoms.push(symptoms);
+            }
+        }
+        
+        if (history) {
+            if (Array.isArray(history)) {
+                history.forEach(h => { if (!record.history.includes(h)) record.history.push(h); });
+            } else if (typeof history === 'string' && !record.history.includes(history)) {
+                record.history.push(history);
+            }
+        }
+
+        if (diseaseInfo && !record.history.includes(diseaseInfo)) {
+            record.history.push(diseaseInfo);
+        }
+
+        await record.save();
+        return successResponse(res, 200, { medicalRecord: record }, "Medical record updated");
+
+    } catch (error) {
+        console.error("Update Medical Record Error:", error);
+        return errorResponse(res, 500, "Error updating medical record");
     }
 };
 
@@ -262,7 +306,9 @@ const generateFallbackResponse = (text, record, history = []) => {
     if (lower.includes("plan") || lower.includes("trip")) {
         return "I can help plan your trip! I estimate a 3-day trip for consultation would cost around ₹15,000 (Flights + Hotel). Which city are you travelling to?";
     }
-    if (record.symptoms.length === 0 && !lower.includes("symptom")) {
+    const symptoms = record.symptoms || [];
+
+    if (symptoms.length === 0 && !lower.includes("symptom")) {
         return "Hello! I'm HealAI. To start, could you tell me what symptoms you are experiencing?";
     }
     return "I've noted that. Anything else you'd like to add to your medical record?";

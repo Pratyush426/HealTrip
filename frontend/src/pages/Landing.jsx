@@ -97,7 +97,7 @@ export default function Landing() {
             title1="Your Journey"
             title2="Continues."
             description="Explore personalized health recommendations, plan your next medical trip, and track your wellness journey—all in one place."
-            primaryButton={{ text: "Plan Your Trip", link: "/travel" }}
+            primaryButton={{ text: "Plan Your Trip", link: "/journey" }}
             secondaryButton={{ text: "View Dashboard", link: "/dashboard" }}
           />
         </div>

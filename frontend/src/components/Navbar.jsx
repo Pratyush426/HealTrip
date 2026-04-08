@@ -54,10 +54,11 @@ export default function Navbar() {
   }, [location.pathname]);
 
   const navLinks = [
-    { name: "Hospitals", path: "/hospitals" },
-    { name: "Travel", path: "/travel" },
-    { name: "Wellness", path: "/yoga" },
     { name: "Dashboard", path: "/dashboard" },
+    { name: "Hospitals", path: "/hospitals" },
+    { name: "Flights", path: "/travel" },
+    { name: "Journey", path: "/journey" },
+    { name: "Wellness", path: "/yoga" },
   ];
 
   const handleSignOut = async () => {

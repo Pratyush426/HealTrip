@@ -1,5 +1,7 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useUser } from "@clerk/clerk-react";
+import { useUserProfile } from "./context/UserProfileContext";
 
 import Landing from "./pages/Landing";
 import Hospitals from "./pages/Hospitals";
@@ -8,6 +10,7 @@ import MedicalForm from "./pages/MedicalForm";
 import DiagnosisResult from "./pages/DiagnosisResult";
 import Dashboard from "./pages/Dashboard";
 import TravelPlanner from "./pages/TravelPlanner";
+import JourneyPlanner from "./pages/JourneyPlanner";
 import PackageDetails from "./pages/PackageDetails";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -24,9 +27,13 @@ import SmoothScroll from "./components/SmoothScroll";
 import CustomCursor from "./components/CustomCursor";
 import LoadingAnimation from "./components/LoadingAnimation";
 import ChatWidget from "./components/ChatWidget";
+import DiseaseDetectionModal from "./components/DiseaseDetectionModal";
 
 function Layout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isLoaded, isSignedIn } = useUser();
+  const { isOnboardingComplete } = useUserProfile();
 
   // Hide Navbar + Footer ONLY on landing page IF DESIRED, but current design has a nice navbar everywhere
   // Let's keep navbar everywhere for consistency in the new design
@@ -39,12 +46,40 @@ function Layout() {
 
   const hideNav = false;
   const [isLoading, setIsLoading] = useState(true);
+  const [showDiseaseModal, setShowDiseaseModal] = useState(false);
+
+  useEffect(() => {
+    // Check URL parameters
+    const params = new URLSearchParams(location.search);
+    if (params.get("disease_detection") === "true") {
+      setShowDiseaseModal(true);
+
+      // Clean up the URL without refreshing
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, [location]);
+
+  // First Login Check
+  useEffect(() => {
+    if (isLoaded && isSignedIn && typeof isOnboardingComplete === 'function') {
+      const publicRoutes = ['/sso-callback', '/verify-email', '/login', '/signup', '/'];
+      if (!isOnboardingComplete() && location.pathname !== '/onboarding' && !publicRoutes.includes(location.pathname)) {
+        navigate('/onboarding', { replace: true });
+      }
+    }
+  }, [isLoaded, isSignedIn, location.pathname, navigate, isOnboardingComplete]);
 
   return (
     <SmoothScroll>
-      <LoadingAnimation onComplete={() => setIsLoading(false)} />
       <CustomCursor />
+      <LoadingAnimation onComplete={() => setIsLoading(false)} />
       <div className="noise-overlay" />
+
+      <DiseaseDetectionModal
+        isOpen={showDiseaseModal}
+        onClose={() => setShowDiseaseModal(false)}
+      />
 
       {!isLoading && <ChatWidget />}
       {!hideNav && location.pathname !== '/package' && location.pathname !== '/package/' && <Navbar />}
@@ -54,10 +89,12 @@ function Layout() {
         <Route path="/hospitals" element={<Hospitals />} />
         <Route path="/yoga" element={<YogaWellness />} />
         <Route path="/medical-form" element={<MedicalForm />} />
+        <Route path="/onboarding" element={<MedicalForm />} />
         <Route path="/diagnosis-result" element={<DiagnosisResult />} />
         <Route path="/diagnosis-upload" element={<DiagnosisUpload />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/travel" element={<TravelPlanner />} />
+        <Route path="/journey" element={<JourneyPlanner />} />
         <Route path="/package" element={<PackageDetails />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/emergency" element={<EmergencySOS />} />

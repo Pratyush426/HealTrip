@@ -1,5 +1,6 @@
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from pydantic import BaseModel
 import pandas as pd
 import numpy as np
@@ -7,7 +8,13 @@ import pickle
 import os
 from sklearn.metrics.pairwise import cosine_similarity
 
-app = FastAPI(title="HealTrip ML Backend", description="Flight recommendations and price prediction API")
+# Use modern lifespan instead of deprecated on_event
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    load_models()
+    yield
+
+app = FastAPI(title="HealTrip ML Backend", description="Flight recommendations and price prediction API", lifespan=lifespan)
 
 # Add CORS middleware
 app.add_middleware(
@@ -51,9 +58,7 @@ def load_models():
         print(f"Error loading models: {e}")
         pass
 
-@app.on_event("startup")
-async def startup_event():
-    load_models()
+# Startup handled by lifespan above
 
 class PricePredictionRequest(BaseModel):
     airline: str

@@ -12,6 +12,10 @@ router.delete('/history/:userId', deleteChatHistory);
 // Send message (saves to DB and gets AI reply)
 router.post('/message', handleChat);
 
+// Update medical record directly
+import { updateMedicalRecord } from '../controllers/chat.controller.js';
+router.post('/update-record', updateMedicalRecord);
+
 // Generate medical report
 router.post('/report', generateReport);
 

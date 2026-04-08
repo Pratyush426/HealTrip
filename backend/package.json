@@ -7,6 +7,8 @@
     "scripts": {
         "start": "node src/server.js",
         "dev": "nodemon src/server.js",
+        "dev:safe": "node -e \"const {execSync}=require('child_process');try{execSync('Stop-Process -Id (Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue).OwningProcess -Force -ErrorAction SilentlyContinue',{shell:'powershell'})}catch(e){}\" && nodemon src/server.js",
+        "kill": "powershell -Command \"Stop-Process -Id (Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue).OwningProcess -Force -ErrorAction SilentlyContinue; Write-Host 'Port 5000 cleared'\"",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [

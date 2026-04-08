@@ -1,3 +1,9 @@
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env'))
+
 from disease_extractor import DiseaseExtractor
 from disease_mapping import map_disease_to_specialty
 from hospital_ranker import HospitalRanker
